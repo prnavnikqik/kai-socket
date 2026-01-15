@@ -1,43 +1,66 @@
-# Kai — Meeting Transcript Prototype
+# MeetingAI
 
-Lightweight mock pipeline that parses WebVTT transcripts, stores normalized meeting objects locally, exposes simple APIs and produces RAG-ready chunks.
+A Next.js application that parses Microsoft Teams meeting transcripts (WebVTT format), stores normalized meeting objects, and provides REST APIs for search and RAG-ready chunks.
 
-Quick start (local)
+## Quick Start
 
-1. Open PowerShell in the repo root (e.g. `C:\Users\pranav.patil\meetingAI`).
-2. Install dependencies:
-
+1. **Install dependencies:**
+   ```bash
    npm install
+   ```
 
-3. Start server:
+2. **Start the server:**
+   ```bash
+   npm run dev
+   ```
+   Server runs on port 5656
 
-   npm start
+3. **Import sample data:**
+   ```bash
+   # PowerShell
+   Invoke-RestMethod -Uri http://localhost:5656/api/import-mock -Method Post
+   
+   # cURL
+   curl -X POST http://localhost:5656/api/import-mock
+   ```
 
-4. Import mock transcripts (after server is running) — either call the import endpoint or let the server read mock files directly:
+4. **Open the app:**
+   Navigate to `http://localhost:5656`
 
-   POST http://localhost:3000/import-mock
+## API Endpoints
 
-APIs
+- `GET /api/transcripts` - List all meetings
+- `GET /api/transcripts/:meetingId` - Get full transcript
+- `GET /api/search?q=term` - Search transcripts
+- `GET /api/chunks/:meetingId` - Get RAG chunks
+- `POST /api/import-mock` - Import VTT files
 
-- GET /health — health check
-- GET /transcripts — list meeting summaries
-- GET /transcripts/:meetingId — get full meeting (entries ordered)
-- GET /search?q=term — search across entries
-- GET /chunks/:meetingId — (placeholder) chunk set for a meeting
-- POST /import-mock[?force=true] — import all `mock_data/*.vtt`
+## MongoDB Support
 
-Data files
+Set environment variables to use MongoDB:
+```bash
+MONGO_URL=mongodb://localhost:27017
+MONGO_DB=teams_notes
+```
 
-- `data/transcripts.json` — normalized meeting documents (one per VTT)
-- `data/chunks.json` — RAG-ready chunks (created by chunker)
+## Troubleshooting
 
-Notes
+### Port 5656 Already in Use
 
-- The importer treats each `.vtt` file as a separate meeting. Do not mix meetings unless explicitly merging.
-- By default `data/` is ignored in `.gitignore`; if you want to commit the seeded data, remove the ignore rule.
+If you get `EADDRINUSE` error:
 
-GitHub push (recommended)
+1. **Find and kill the process:**
+   ```powershell
+   netstat -ano | findstr :5656
+   taskkill /PID <PID_NUMBER> /F
+   ```
+   (Run PowerShell as Administrator if you get "Access is denied")
 
-- Use the GitHub CLI to login then create & push the repo securely (see the PowerShell snippet in this README).
+## Presentation Guide
 
-License: MIT (adjust as needed)
+For detailed instructions on how to run, use, and present this prototype, see:
+- **`HOW_TO_RUN_AND_PRESENT.md`** - Complete guide with demo script and talking points
+
+## License
+
+MIT
