@@ -1,0 +1,199 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:12.000
+Host: Okay, good morning everyone — thanks for joining. We'll try to keep this to an hour. Quick round of intros if anyone is new; otherwise we jump straight into updates.
+
+00:00:12.500 --> 00:00:25.000
+Eve: Hi, Eve from Product. I'm mainly here for prioritization and to flag a couple of customer asks that might shift the roadmap.
+
+00:00:25.500 --> 00:00:38.000
+Sam: Sam, backend. I've got a migration plan draft and a perf question later — spoiler: hope it goes well.
+
+00:00:38.500 --> 00:00:52.000
+Priya: Priya, frontend. Working on the new dashboard components and a CI validator; I'll show a quick preview in the middle of the meeting.
+
+00:00:52.500 --> 00:01:05.000
+Liam: Liam, analytics. We finished the initial pipeline; there are some gaps in legacy event mappings I'll call out.
+
+00:01:05.500 --> 00:01:25.000
+Host: Great — thanks. Eve, do you want to lead with product changes and why we might reorder features? Keep it to a few minutes, then we'll go to engineering.
+
+00:01:25.500 --> 00:04:00.000
+Eve: Sure. We did five customer interviews last week; three customers requested stronger compliance controls tied to Feature C. Long story short: if we push Feature C ahead of B, we mitigate a contract risk for a pilot customer and it unlocks a potential expansion. I know that affects scheduling, but the tradeoff seems worth it.
+
+00:04:00.500 --> 00:04:30.000
+Host: Quick clarifying question — is the work for C mostly new or does it reuse existing pieces from B?
+
+00:04:30.500 --> 00:06:00.000
+Eve: Mostly new; there is some overlap in the auth flow with B, but the compliance controls require schema changes and an approval workflow. It's not trivial. Sam, from your side, what are the migration impacts?
+
+00:06:00.500 --> 00:09:00.000
+Sam: The big thing is a schema migration for the events model. We can do a backwards-compatible rollout with feature flags, but we will need a short maintenance window for the DB change if we do a bulk rewrite. I'd prefer a staged canary approach to avoid surprises.
+
+00:09:00.500 --> 00:09:30.000
+Priya: Can I jump in — if the schema changes, we need a contract with the frontend so we don't ship incompatible updates. Even minor renames break the dashboard.
+
+00:09:30.500 --> 00:10:15.000
+Sam: Absolutely. That’s why I'm proposing a versioned schema and a migration plan. We'll publish a compatibility guide and a deprecation window.
+
+00:10:15.500 --> 00:11:00.000
+Eve: Okay, action item — product will draft a proposal with business impact and a recommended priority. Engineering can respond with a migration estimate. Agreed?
+
+00:11:00.500 --> 00:11:10.000
+All: Agreed.
+
+00:11:10.500 --> 00:13:00.000
+Host: Sam, can you give a quick overview of the migration timeline you'd expect for an early rollout? Rough ballpark is fine.
+
+00:13:00.500 --> 00:15:00.000
+Sam: For a safe canary-first rollout: two weeks for scripts and canary infra, one week of canary observation, and then a scheduled production cutover over a weekend if things look green. So three to four weeks end-to-end for a careful approach.
+
+00:15:00.500 --> 00:15:20.000
+Priya: That sounds reasonable. Frontend can align to the canary schedule — I just need the schema PRs early so the UI validators can run in CI.
+
+00:15:20.500 --> 00:16:30.000
+Liam: Quick note on data — legacy events don't have the new auditing fields. If we migrate, we'll need reconciliation jobs to backfill values or we risk reporting gaps. That could add another week for backfills depending on how we batch.
+
+00:16:30.500 --> 00:17:00.000
+Sam: Good call. We can add a backfill plan to the migration doc. I'll estimate duration based on current event volumes.
+
+00:17:00.500 --> 00:18:00.000
+Host: All right, let's shift to the dashboard preview. Priya, you mentioned a short demo — can you share the main changes and any open questions?
+
+00:18:00.500 --> 00:20:30.000
+Priya: Yes. So the major changes: component library v2 adds theming tokens and a table rewrite that supports virtualized rows. The tricky part is stabilizing the table when live updates stream in — we saw a flash/jump when new rows arrive.
+
+00:20:30.500 --> 00:21:00.000
+Priya: We tried placeholders, and that helped, but there's still a small layout shift. I'm proposing we buffer inserts for 200–300ms and batch updates to avoid jank. Thoughts?
+
+00:21:00.500 --> 00:21:40.000
+Sam: Buffering sounds fine, but be cautious about observable latency. For critical alerts we shouldn't delay. Can we bypass buffering for high-priority items?
+
+00:21:40.500 --> 00:22:10.000
+Priya: Yes — we can tag events as high-priority and flush them immediately. The buffer is only for regular rows. Implementation is straightforward.
+
+00:22:10.500 --> 00:23:00.000
+Liam: From analytics side, buffering is invisible to our pipelines since we ingest raw events. As long as the UI doesn't drop events, fine. We should keep an audit log for the UI buffering so it's easier to debug user-reported issues.
+
+00:23:00.500 --> 00:23:30.000
+Priya: Good idea — I'll add a debug flag and a small telemetry ping when buffering happens.
+
+00:23:30.500 --> 00:24:00.000
+Host: Okay — next, reliability and monitoring. Liam, anything from the pipeline you want to highlight?
+
+00:24:00.500 --> 00:25:30.000
+Liam: Two things: first, our daily job found a gap in legacy events mapping — about 2% of old events have null user IDs, which skews DAU. Second, dashboards now include a reconciliation panel but we need to surface it to the team more prominently.
+
+00:25:30.500 --> 00:26:10.000
+Sam: Do we know why user IDs are null? Is it upstream or a parsing issue?
+
+00:26:10.500 --> 00:27:00.000
+Liam: Early analysis says it's upstream; a version of the producer dropped the field for a short window. Backfills should fix it, but we also need an alert when schemas change upstream.
+
+00:27:00.500 --> 00:27:45.000
+Priya: That alert would be helpful. We could add a lightweight schema diff check in CI for producers merging changes. It would catch accidental removals.
+
+00:27:45.500 --> 00:28:30.000
+Host: Action — Priya to prototype a schema-diff validator in CI. Liam to scope the backfill and Sam to estimate the DB impact. Sound good?
+
+00:28:30.500 --> 00:28:50.000
+All: Yes.
+
+00:28:50.500 --> 00:30:00.000
+Host: Quick check-in — anyone blocked right now? If not, we'll move to the tradeoff discussion on streaming infrastructure.
+
+00:30:00.500 --> 00:32:00.000
+Sam: I'll kick off. Two options on the table: self-hosted Kafka or managed streaming. Kafka gives us low-latency and consumer control; managed reduces ops but costs more and can limit fine-grained tuning. My leaning is hybrid: Kafka for the hot, low-latency paths and managed streaming for bulk ingestion.
+
+00:32:00.500 --> 00:33:00.000
+Eve: From product, speed to market matters. If managed streaming gets an important customer live faster, that's a win. Can we prototype on managed and later carve out hot-paths to Kafka if needed?
+
+00:33:00.500 --> 00:33:40.000
+Sam: Yes, but prototypes must include extraction plans. We can't hard-bind to vendor-specific features without an exit strategy. That increases initial engineering effort.
+
+00:33:40.500 --> 00:34:15.000
+Priya: For the frontend, either option is transparent as long as the schemas are stable. My concern is more about delivery cadence — frequent small schema changes are disruptive.
+
+00:34:15.500 --> 00:35:00.000
+Liam: Cost-wise, managed streaming will show in monthly bills. For analytics, both options are fine. We should run a cost model for expected throughput and growth.
+
+00:35:00.500 --> 00:35:30.000
+Host: Action item — Sam to prototype hybrid approach and write a short pros/cons doc, including an estimated ops cost and time-to-implement. Eve to prioritize based on customer needs.
+
+00:35:30.500 --> 00:36:00.000
+Sam: I'll include runbook sketches for failover scenarios as well.
+
+00:36:00.500 --> 00:37:00.000
+Host: Great. Quick pause — any quick wins or blockers that can be resolved this week? Speak up now.
+
+00:37:00.500 --> 00:37:30.000
+Priya: We need one small design decision on table row density; it's blocking a CSS bug. If we can decide mid-week, I can finish the mobile fixes.
+
+00:37:30.500 --> 00:38:00.000
+Eve: Product can decide. Let's default to denser rows for power users and a compact toggle for others.
+
+00:38:00.500 --> 00:38:30.000
+Priya: Perfect — that'll unblock me.
+
+00:38:30.500 --> 00:39:30.000
+Liam: Also, I'll share the reconciliation dashboard link after the meeting and tag the folks who need access. Expect a short doc describing the reconciliation steps.
+
+00:39:30.500 --> 00:40:00.000
+Host: Thanks — sounds like a plan. We're about 20 minutes in. Do we want to do a 5-minute breakout to let engineering sketch PRs and then come back for decisions?
+
+00:40:00.500 --> 00:40:12.000
+Sam: Yes, quick breakout sounds useful.
+
+00:40:12.500 --> 00:45:00.000
+[05-minute breakout — quiet / side conversations]
+
+00:45:00.500 --> 00:45:30.000
+Host: Back — quick status from breakout leads. Sam?
+
+00:45:30.500 --> 00:46:20.000
+Sam: We sketched the migration steps and identified the parts that need coordination: schema PRs, feature flags, and a canary environment. I have a draft timeline and will post it.
+
+00:46:20.500 --> 00:47:00.000
+Priya: I created a prototype for the CI schema diff and a small demo for buffering UI updates. I'll push the branches after this meeting.
+
+00:47:00.500 --> 00:47:40.000
+Liam: I outlined the backfill strategy and estimated compute costs for a one-time backfill; it's non-trivial but doable within a week if we parallelize jobs.
+
+00:47:40.500 --> 00:48:20.000
+Host: Excellent. Let's lock down owners and due dates. Sam — migration plan doc by next Wednesday. Priya — CI prototype and UI changes by Tuesday. Liam — backfill ETA and cost by Friday. Eve — finalize product priority and inform sales.
+
+00:48:20.500 --> 00:49:00.000
+Eve: I'll coordinate with sales and draft the priority memo.
+
+00:49:00.500 --> 00:50:00.000
+Sam: One more thing on the DB change — we should schedule a short DBA review to sign off on the maintenance window. I'll set that up.
+
+00:50:00.500 --> 00:51:00.000
+Priya: Also, small accessibility note — the new table header contrast needs a minor tweak. I'll open an issue and fix it today.
+
+00:51:00.500 --> 00:52:00.000
+Liam: I'll add a reconciliation health check to our daily jobs so we catch regressions early. Also, I'll add owners to the dashboard widgets.
+
+00:52:00.500 --> 00:53:00.000
+Host: Any risks we haven't covered? Call them out now so we can add mitigation steps.
+
+00:53:00.500 --> 00:54:00.000
+Sam: Risk: unexpected data volume growth during migration. Mitigation: throttle writes or do the migration in smaller batches and monitor.
+
+00:54:00.500 --> 00:55:00.000
+Eve: Risk: customer timeline pressure causing us to cut corners. Mitigation: product will only accelerate if engineering signs off on tradeoffs.
+
+00:55:00.500 --> 00:56:00.000
+Priya: Risk: front-end regressions due to schema drift. Mitigation: the CI schema diff and feature flags will help.
+
+00:56:00.500 --> 00:57:00.000
+Host: Good. Let's recap action items and owners so everyone's clear.
+
+00:57:00.500 --> 00:58:20.000
+Host: Recap — Sam: migration doc + DBA meeting; Priya: CI schema diff + UI fixes; Liam: backfill plan + reconciliation checks; Eve: prioritize and communicate; Product & Eng sync next Monday morning. I'll send meeting notes with owners.
+
+00:58:20.500 --> 00:59:00.000
+All: Thanks. Sounds good.
+
+00:59:00.500 --> 01:00:00.000
+Host: Perfect — thanks everyone for staying on time. If no objections, meeting adjourned. Have a great day.

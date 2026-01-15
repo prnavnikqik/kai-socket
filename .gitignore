@@ -1,0 +1,35 @@
+# Node/npm
+node_modules/
+
+# Local mock DB and generated data
+data/
+teams-notes/data/
+
+# Environment
+.env
+teams-notes/.env
+
+# Logs
+npm-debug.log
+*.log
+
+# Editor folders
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Coverage
+coverage/
+
+# Prototypes and large mock assets you may not want in Git
+prototype.md
+mock_data/*.vtt
+
+# Databases
+*.sqlite
+*.db
+
+# Others
+.npm/
