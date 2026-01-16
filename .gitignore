@@ -1,13 +1,14 @@
 # Node/npm
 node_modules/
+.next/
 
 # Local mock DB and generated data
 data/
-teams-notes-web/data/
 
 # Environment
 .env
-teams-notes/.env
+.env.local
+.env*.local
 
 # Logs
 npm-debug.log
@@ -23,8 +24,12 @@ npm-debug.log
 # Coverage
 coverage/
 
-# Prototypes and large mock assets you may not want in Git
-prototype.md
+# Documentation and markdown files (keep only README.md)
+docs/
+*.md
+!README.md
+
+# Mock data
 mock_data/*.vtt
 
 # Databases
