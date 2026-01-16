@@ -1,0 +1,6 @@
+{
+  "/page": "app/page.js",
+  "/api/transcripts/route": "app/api/transcripts/route.js",
+  "/api/import-mock/route": "app/api/import-mock/route.js",
+  "/api/search/route": "app/api/search/route.js"
+}

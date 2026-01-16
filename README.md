@@ -1,66 +1,75 @@
-# MeetingAI
+# Kai — Meeting Transcript Prototype
 
-A Next.js application that parses Microsoft Teams meeting transcripts (WebVTT format), stores normalized meeting objects, and provides REST APIs for search and RAG-ready chunks.
+Lightweight mock pipeline that parses WebVTT transcripts, stores normalized meeting objects locally, exposes simple APIs and produces RAG-ready chunks.
 
-## Quick Start
+This repo has been consolidated to use `teams-notes-web/` as the canonical app (Next.js with a lightweight backend adapter and local storage). The older `teams-notes/` service folder is now redundant and can be removed.
 
-1. **Install dependencies:**
-   ```bash
+Quick start (Windows PowerShell)
+
+1. Stop any process using port 3000 (if necessary):
+
+   ```
+   netstat -ano | findstr :3000
+   taskkill /PID <PID> /F
+   ```
+
+2. Install dependencies for the web app:
+
+   ```
+   cd .\teams-notes-web
    npm install
    ```
 
-2. **Start the server:**
-   ```bash
+3. Start the dev server (from teams-notes-web folder):
+
+   ```
    npm run dev
    ```
-   Server runs on port 5656
 
-3. **Import sample data:**
-   ```bash
-   # PowerShell
-   Invoke-RestMethod -Uri http://localhost:5656/api/import-mock -Method Post
-   
-   # cURL
-   curl -X POST http://localhost:5656/api/import-mock
+   If `npm run dev` is not defined, use:
+
+   ```
+   npx next dev --port 3000
    ```
 
-4. **Open the app:**
-   Navigate to `http://localhost:5656`
+4. Seed mock transcripts (after server is running):
 
-## API Endpoints
-
-- `GET /api/transcripts` - List all meetings
-- `GET /api/transcripts/:meetingId` - Get full transcript
-- `GET /api/search?q=term` - Search transcripts
-- `GET /api/chunks/:meetingId` - Get RAG chunks
-- `POST /api/import-mock` - Import VTT files
-
-## MongoDB Support
-
-Set environment variables to use MongoDB:
-```bash
-MONGO_URL=mongodb://localhost:27017
-MONGO_DB=teams_notes
-```
-
-## Troubleshooting
-
-### Port 5656 Already in Use
-
-If you get `EADDRINUSE` error:
-
-1. **Find and kill the process:**
-   ```powershell
-   netstat -ano | findstr :5656
-   taskkill /PID <PID_NUMBER> /F
    ```
-   (Run PowerShell as Administrator if you get "Access is denied")
+   curl -X POST http://localhost:3000/api/import-mock
+   ```
 
-## Presentation Guide
+   or in PowerShell:
 
-For detailed instructions on how to run, use, and present this prototype, see:
-- **`HOW_TO_RUN_AND_PRESENT.md`** - Complete guide with demo script and talking points
+   ```
+   Invoke-RestMethod -Uri http://localhost:3000/api/import-mock -Method Post
+   ```
 
-## License
+5. Open the demo UI in your browser:
 
-MIT
+   ```
+   http://localhost:3000
+   ```
+
+APIs
+
+- GET /api/transcripts — list meeting summaries
+- GET /api/transcripts/:meetingId — get full meeting
+- GET /api/search?q=term — search across entries
+- GET /api/chunks/:meetingId — get chunk list for meeting
+- POST /api/import-mock — import mock VTTs from `teams-notes-web/public/mock_data`
+
+Data files (generated)
+
+- teams-notes-web/data/transcripts.json
+- teams-notes-web/data/chunks.json
+
+To remove legacy files
+
+If you no longer need the legacy service, delete the `teams-notes/` folder. Ensure you have migrated any needed utilities into `teams-notes-web/lib/` before deleting.
+
+Notes
+
+- To enable MongoDB for production, set MONGO_URL and MONGO_DB environment variables. The web app will upsert transcripts and chunks into Mongo when configured.
+- Keep `data/` out of version control (it's in .gitignore) unless you intentionally commit seeded data.
+
+License: MIT
