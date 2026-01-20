@@ -24,6 +24,13 @@ export default function MeetingAI() {
     setMeetings(data || []);
   }
 
+  async function doImport() {
+    setStatus('Importing...');
+    await fetch('/api/import-mock', { method: 'POST' });
+    await loadMeetings();
+    setStatus('Imported samples.');
+  }
+
   function checkLogin() {
     const hasToken = document.cookie.includes('ms_token');
     setIsLoggedIn(hasToken);
@@ -31,10 +38,20 @@ export default function MeetingAI() {
   }
 
   async function loadRealMeetings() {
-    const res = await fetch('/api/teams/recent');
-    if (res.ok) {
-      const data = await res.json();
-      setRealMeetings(data);
+    setStatus('Loading recent meetings...');
+    try {
+      const res = await fetch('/api/teams/recent');
+      if (res.ok) {
+        const data = await res.json();
+        setRealMeetings(Array.isArray(data) ? data : []);
+        setStatus('');
+      } else {
+        const err = await res.json();
+        setStatus('Failed to load Teams meetings: ' + (err.error || res.statusText));
+      }
+    } catch (e) {
+      console.error(e);
+      setStatus('Network error loading meetings.');
     }
   }
 
@@ -57,12 +74,6 @@ export default function MeetingAI() {
     }
   }
 
-  async function doImport() {
-    setStatus('Importing...');
-    await fetch('/api/import-mock', { method: 'POST' });
-    await loadMeetings();
-    setStatus('Imported samples.');
-  }
 
   async function doUpload(e) {
     const file = e.target.files[0];
@@ -120,7 +131,7 @@ export default function MeetingAI() {
 
   return (
     <div>
-      <h1>MeetingAI (Backend-First Shell)</h1>
+      <h1>MeetingAI (First Shell)</h1>
       <p>Status: {status || 'Ready'}</p>
 
       <div style={{ display: 'flex', gap: '20px' }}>
@@ -133,11 +144,11 @@ export default function MeetingAI() {
             </button>
           ) : (
             <div>
-              <p>✅ Connected to Teams</p>
+              <p>Connected to Teams</p>
               <button onClick={() => { document.cookie = 'ms_token=; Max-Age=0'; setIsLoggedIn(false); }}>Logout</button>
               <h4>Recent Meetings</h4>
               <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #eee', padding: '5px' }}>
-                {realMeetings.length === 0 ? <p>No recent meetings found.</p> : realMeetings.map(rm => (
+                {realMeetings.length === 0 ? <p style={{ padding: '10px', color: '#666', fontStyle: 'italic' }}>No recent online meetings found (Last 7 Days).</p> : realMeetings.map(rm => (
                   <div key={rm.id} style={{ fontSize: '0.8em', marginBottom: '10px', borderBottom: '1px solid #fafafa' }}>
                     <strong>{rm.subject}</strong><br />
                     <button onClick={() => ingestMeeting(rm.id)}>Ingest This Meeting</button>
@@ -149,6 +160,7 @@ export default function MeetingAI() {
           <hr />
           <h3>Local Controls</h3>
           <button onClick={doImport}>Import Mock Data</button>
+
           <input type="file" onChange={doUpload} />
           <hr />
           <h3>Meetings</h3>
@@ -181,6 +193,7 @@ export default function MeetingAI() {
                   <div>
                     <p><strong>Source:</strong> {selectedMeeting.source}</p>
                     <p><strong>Duration:</strong> {selectedMeeting.durationSeconds}s</p>
+
                     {selectedMeeting.recordingUrl && (
                       <div style={{ margin: '20px 0', background: '#000', padding: '10px', borderRadius: '8px' }}>
                         <h4 style={{ color: '#fff', marginTop: 0 }}>Meeting Recording</h4>
@@ -189,6 +202,7 @@ export default function MeetingAI() {
                         </video>
                       </div>
                     )}
+
                     <h3>Transcript (First 20)</h3>
                     {selectedMeeting.entries?.slice(0, 20).map((e, i) => (
                       <div key={i} style={{ marginBottom: '5px' }}>
@@ -241,7 +255,7 @@ export default function MeetingAI() {
               </div>
             </>
           ) : (
-            <p>Select a meeting </p>
+            <p>Select a meeting from the sidebar.</p>
           )}
         </div>
       </div>
