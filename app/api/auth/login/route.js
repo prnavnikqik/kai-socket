@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAuthUrl } from '../../../lib/auth.js';
-
+import { getAuthUrl } from '../../../../lib/auth.js';
 export async function GET() {
     try {
         const url = await getAuthUrl();

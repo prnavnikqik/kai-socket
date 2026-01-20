@@ -8,6 +8,24 @@ A premium Next.js application that transforms Microsoft Teams meeting transcript
 
 ---
 
+## ✨ Features
+
+### 🎨 **Premium Modern UI**
+- **Dark Theme Design System** - Glassmorphism, gradients, and smooth animations
+- **Responsive Layout** - Works beautifully on all screen sizes
+- **Micro-interactions** - Hover effects, loading states, and transitions
+
+### 🤖 **AI-Powered Intelligence**
+- **RAG-Based Chat** - Ask questions about meetings and get contextual answers
+- **Auto-Summarization** - Generate executive summaries and detailed breakdowns
+- **Action Item Extraction** - Automatically identify tasks, owners, and deadlines
+- **Powered by Gemini 2.0 Flash** - Fast, accurate, and cost-effective
+
+### 📊 **Meeting Management**
+- **VTT Upload** - Drag and drop MS Teams transcript files
+- **Smart Parsing** - Preserves speaker attribution and timestamps
+- **Chunking Strategy** - 90-second windows with 15-second overlap for optimal RAG
+- **Search & Filter** - Find specific meetings quickly
 
 ### 🔧 **Developer-Friendly**
 - **File or MongoDB Storage** - Swap backends without code changes
@@ -29,7 +47,12 @@ Create a `.env` file (copy from `.env.example`):
 cp .env.example .env
 ```
 
+**Required:** Add your Gemini API key:
+```env
+GEMINI_API_KEY=your_actual_gemini_api_key
+```
 
+Get your free API key at: https://aistudio.google.com/apikey
 
 ### 3. Start Development Server
 ```bash
@@ -133,15 +156,32 @@ User Question → Search Chunks → Top 10 Relevant → Gemini → Answer
 
 ### 4. **Summarization**
 ```
-Meeting Entries → llm → Executive Summary + Key Topics + Decisions
+Meeting Entries → Gemini → Executive Summary + Key Topics + Decisions
 ```
 
 ### 5. **Action Extraction**
 ```
-Transcript → llm → [Task, Owner, Deadline, Priority, Context]
+Transcript → Gemini → [Task, Owner, Deadline, Priority, Context]
 ```
 
 ---
+
+## 🎨 Design Philosophy
+
+### Color Palette
+- **Primary:** `#6366f1` (Indigo) - Trust & Intelligence
+- **Secondary:** `#8b5cf6` (Violet) - Creativity
+- **Accent:** `#ec4899` (Pink) - Energy
+
+### Animations
+- **Fade In:** 600ms for page loads
+- **Slide In:** 500ms for list items
+- **Hover:** 250ms transitions with glow effects
+
+### Typography
+- **Font:** Inter (Google Fonts)
+- **Weights:** 300-800 for hierarchy
+- **Line Height:** 1.6 for readability
 
 ---
 
@@ -165,6 +205,21 @@ Default port is **5656**. To change:
 }
 ```
 
+---
+
+## 🐛 Troubleshooting
+
+### Port 5656 Already in Use
+```powershell
+# Find and kill the process (Run as Administrator)
+netstat -ano | findstr :5656
+taskkill /PID <PID_NUMBER> /F
+```
+
+### Gemini API Error
+- **Verify API key** in `.env` file
+- **Check quota** at https://aistudio.google.com
+- **Review error message** in browser console
 
 ### Upload Fails
 - **File size limit:** Next.js default is 4MB
@@ -186,6 +241,18 @@ Default port is **5656**. To change:
 
 ---
 
+## 🏗️ Simplified Production Architecture
+
+To ensure maximum reliability and cost-efficiency for initial testing, the application uses a **Simplified RAG Pipeline**:
+
+1.  **Ingestion**: Real-time meeting transcripts are pulled from Microsoft Graph.
+2.  **Storage**: Transcripts and 90-second chunks are stored in **MongoDB Atlas**.
+3.  **Retrieval (RAG)**: Uses a robust **Keyword-based Search** over the Atlas collections to identify relevant context.
+4.  **Generation**: Uses **Groq (Llama 3.3 70B)** to synthesize answers based only on the retrieved meeting context.
+5.  **Media**: Integrated video player for Microsoft Teams recordings.
+
+---
+
 ## 📊 Sample Meetings
 
 Included VTT files:
@@ -193,7 +260,14 @@ Included VTT files:
 2. **Business Review** (4m) - Quarterly metrics and strategic planning
 3. **Standup** (30s) - Quick team sync
 
-All samples use realistic MS Teams WebVTT format with proper speaker tags.
 
+---
 
+## 🙏 Acknowledgments
 
+- **Next.js** - React framework
+- **Google Gemini** - LLM provider
+- **MongoDB** - Database (optional)
+- **Inter Font** - Typography
+
+---
