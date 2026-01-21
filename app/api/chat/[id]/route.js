@@ -21,7 +21,7 @@ export async function POST(request, { params }) {
 
         // Index search (Semantic RAG)
         const { searchChunksSemantic } = await import('../../../../lib/llm-service.js');
-        const relevantChunks = await searchChunksSemantic(question, allChunks);
+        const relevantChunks = await searchChunksSemantic(question, id);
 
         if (relevantChunks.length === 0) {
             return NextResponse.json({

@@ -53,4 +53,4 @@ async function verifyChat() {
     await client.close();
 }
 
-verifyChat().catch(console.error)
+verifyChat().catch(console.error);
