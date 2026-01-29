@@ -1,3 +1,0 @@
-del ;
-lib/vector-service.js
-scripts/ingest.mjs
